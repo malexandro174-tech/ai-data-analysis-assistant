@@ -1,6 +1,10 @@
 from pathlib import Path
 import re
 
+from fastapi.testclient import TestClient
+
+from app.main import app
+
 
 def test_secret_scan():
     root = Path(__file__).parents[1]
@@ -11,3 +15,11 @@ def test_secret_scan():
             if expression.search(path.read_text(encoding="utf-8", errors="ignore")):
                 hits.append(path)
     assert hits == []
+
+
+def test_security_headers():
+    response = TestClient(app).get("/")
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["cache-control"] == "no-store"
+    assert "frame-ancestors 'none'" in response.headers["content-security-policy"]

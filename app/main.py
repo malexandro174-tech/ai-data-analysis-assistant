@@ -4,7 +4,7 @@ import logging
 import os
 from types import SimpleNamespace
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from app.broker.access_adapter import BrokerAccessAdapter
@@ -31,6 +31,25 @@ app.state.services = SimpleNamespace(settings=settings, workspace=workspace, fil
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(workspace_router)
 app.include_router(make_health(app))
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Keep browser-side data handling constrained even outside the proxy."""
+    response = await call_next(request)
+    if os.getenv("APP_SECURITY_HEADERS", "true").lower() != "true":
+        return response
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; "
+        "img-src 'self' data:; style-src 'self'; object-src 'none'",
+    )
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.on_event("startup")

@@ -17,6 +17,7 @@ services:
       HISTORY_LIMIT: ${HISTORY_LIMIT:-30}
       RETENTION_DAYS: ${RETENTION_DAYS:-14}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      APP_SECURITY_HEADERS: ${APP_SECURITY_HEADERS:-true}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ANALYST_BROKER_URL: ${ANALYST_BROKER_URL:-http://credential-access-broker:8101}
       ANALYST_REQUESTER_ID: ${ANALYST_REQUESTER_ID:-ai_data_analysis_workspace}
