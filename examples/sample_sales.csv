@@ -1,0 +1,10 @@
+month,region,revenue,orders,channel
+2026-01,North,12400,108,Direct
+2026-02,North,13800,121,Direct
+2026-03,North,15200,137,Partner
+2026-01,South,9100,84,Partner
+2026-02,South,10200,93,Direct
+2026-03,South,11800,104,Partner
+2026-01,West,7600,71,Online
+2026-02,West,8400,78,Online
+2026-03,West,9700,91,Online

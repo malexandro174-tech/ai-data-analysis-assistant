@@ -1,0 +1,48 @@
+services:
+  web:
+    build: .
+    image: ai-data-analysis-assistant:1.0.0
+    container_name: ai-data-analysis-assistant
+    environment:
+      APP_NAME: ${APP_NAME:-AI Data Analyst Workspace}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      APP_PORT: ${APP_PORT:-8000}
+      ROOT_PATH: ${ROOT_PATH:-}
+      STORAGE_DIR: ${STORAGE_DIR:-/app/storage}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
+      MAX_ROWS: ${MAX_ROWS:-50000}
+      MAX_COLUMNS: ${MAX_COLUMNS:-150}
+      MAX_IMAGE_PIXELS: ${MAX_IMAGE_PIXELS:-16000000}
+      MAX_ARTIFACTS_PER_SESSION: ${MAX_ARTIFACTS_PER_SESSION:-30}
+      HISTORY_LIMIT: ${HISTORY_LIMIT:-30}
+      RETENTION_DAYS: ${RETENTION_DAYS:-14}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ANALYST_BROKER_URL: ${ANALYST_BROKER_URL:-http://credential-access-broker:8101}
+      ANALYST_REQUESTER_ID: ${ANALYST_REQUESTER_ID:-ai_data_analysis_workspace}
+    ports:
+      - "127.0.0.1:${APP_HOST_PORT:-8000}:8000"
+    volumes:
+      - analyst_uploads:/app/storage/uploads
+      - analyst_outputs:/app/storage/outputs
+      - analyst_metadata:/app/storage/metadata
+    networks:
+      - broker_internal
+      - workspace_internal
+    restart: unless-stopped
+    mem_limit: 320m
+    cpus: 0.75
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  analyst_uploads:
+  analyst_outputs:
+  analyst_metadata:
+
+networks:
+  workspace_internal:
+    internal: true
+  broker_internal:
+    external: true
+    name: ${BROKER_NETWORK_NAME:-credential_access_broker}

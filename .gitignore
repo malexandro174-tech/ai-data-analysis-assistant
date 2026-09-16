@@ -1,0 +1,13 @@
+.env
+.venv/
+.runtime-venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+storage/uploads/*
+storage/outputs/*
+storage/metadata/*
+!storage/uploads/.gitkeep
+!storage/outputs/.gitkeep
+!storage/metadata/.gitkeep
+docx-qa/

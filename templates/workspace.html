@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Data Analyst Workspace</title><link rel="stylesheet" href="{{ root_path }}/static/workspace.css">
+</head>
+<body>
+<header><a href="{{ root_path }}/">AI Data Analyst Workspace</a><span>Безопасный анализ данных и изображений</span><form method="post" action="{{ root_path }}/new-chat"><button>Новый чат</button></form></header>
+<main>
+  <section class="chat-panel card">
+    <div class="eyebrow">CONVERSATION {{ conversation.conversation_id }}</div>
+    <h1>AI Data Analyst для бизнес-данных</h1>
+    {% if notice %}<p class="notice">{{ notice }}</p>{% endif %}{% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <div class="messages">
+      {% for message in conversation.messages %}<article class="message {{ message.role }}"><b>{{ "Вы" if message.role == "user" else "Аналитик" }}</b><p>{{ message.content }}</p></article>{% else %}<p class="muted">Загрузите CSV, Excel, JSON или изображение. Данные останутся в текущем изолированном workspace.</p>{% endfor %}
+    </div>
+    <form class="composer" method="post" action="{{ root_path }}/chat"><input name="question" maxlength="1200" placeholder="Например: Проанализируй файл, кратко" required><button>Отправить</button></form>
+  </section>
+  <aside class="sidebar">
+    <section class="card"><h2>Файл</h2><form method="post" action="{{ root_path }}/upload" enctype="multipart/form-data"><input type="file" name="file" required accept=".csv,.xlsx,.xls,.json,.png,.jpg,.jpeg,.webp"><button>Загрузить</button></form>
+      {% if active %}<p><b>{{ active.original_name }}</b><br><span class="muted">{{ active.kind }} · {{ active.size_bytes }} bytes</span></p>{% endif %}
+      <ul>{% for file in files %}<li>{{ file.original_name }}</li>{% endfor %}</ul></section>
+    <section class="card"><h2>Действия</h2><div class="actions">
+      <form method="post" action="{{ root_path }}/chart/line"><button>Line</button></form><form method="post" action="{{ root_path }}/chart/bar"><button>Bar</button></form><form method="post" action="{{ root_path }}/chart/histogram"><button>Histogram</button></form><form method="post" action="{{ root_path }}/chart/scatter"><button>Scatter</button></form><form method="post" action="{{ root_path }}/chart/pie"><button>Pie</button></form>
+      <form method="post" action="{{ root_path }}/report"><button>Создать DOCX</button></form><form method="post" action="{{ root_path }}/summary"><button>Сохранить Markdown</button></form>
+    </div></section>
+    <section class="card"><h2>Артефакты</h2><ul>{% for artifact in artifacts %}<li><a href="{{ root_path }}{{ artifact.download_url }}">↓ {{ artifact.type }}</a><small>{{ artifact.size_bytes }} bytes</small></li>{% else %}<li class="muted">Пока нет артефактов</li>{% endfor %}</ul></section>
+    <section class="card status"><h2>Статус</h2><p>Broker: scoped</p><p>Resolved model: {{ resolved_model or "будет определена после запроса" }}</p></section>
+  </aside>
+</main>
+</body></html>
