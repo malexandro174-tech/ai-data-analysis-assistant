@@ -43,6 +43,13 @@ async def test_file_upload_jpeg(files, workspace):
 
 
 @pytest.mark.asyncio
+async def test_file_upload_webp(files, workspace):
+    image = Image.new("RGB", (20, 20), "red"); memory = BytesIO(); image.save(memory, "WEBP")
+    record = await files.save_upload(upload("chart.webp", memory.getvalue(), "image/webp"), workspace.create().conversation_id)
+    assert record.extension == ".webp"
+
+
+@pytest.mark.asyncio
 async def test_file_upload_xlsx(files, workspace):
     memory = BytesIO(); pd.DataFrame({"revenue": [10, 20]}).to_excel(memory, index=False)
     record = await files.save_upload(upload("marketing.xlsx", memory.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), workspace.create().conversation_id)
