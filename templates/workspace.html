@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Data Analyst Workspace</title><link rel="stylesheet" href="{{ root_path }}/static/workspace.css">
+  <title>AI Data Analyst Workspace</title><link rel="stylesheet" href="{{ url_for('static', path='workspace.css').path }}">
 </head>
 <body>
 <header><a href="{{ root_path }}/">AI Data Analyst Workspace</a><span>Безопасный анализ данных и изображений</span><form method="post" action="{{ root_path }}/new-chat"><button>Новый чат</button></form></header>

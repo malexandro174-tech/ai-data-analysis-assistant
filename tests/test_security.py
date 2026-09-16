@@ -23,3 +23,10 @@ def test_security_headers():
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["cache-control"] == "no-store"
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+
+
+def test_subpath_static_url_is_scheme_independent():
+    response = TestClient(app, root_path="/data-analyst").get("/data-analyst/")
+    assert response.status_code == 200
+    assert 'href="/data-analyst/static/workspace.css"' in response.text
+    assert 'href="http://' not in response.text
