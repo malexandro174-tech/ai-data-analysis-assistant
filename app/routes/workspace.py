@@ -101,7 +101,7 @@ async def chat(request: Request, question: str = Form(...)):
                 notices.append(f"Preview готов: {len(summary.preview)} строк для безопасного просмотра.")
             elif action.type == "generate_chart" and frame is not None:
                 chart = await asyncio.to_thread(services.charts.generate, frame, services.settings.outputs_dir, conversation.conversation_id, action.chart_type or "bar", action.x_column, action.y_column)
-                artifact = services.artifacts.register(conversation.conversation_id, record.file_id, "chart_png", chart.name, chart, {"chart_type": action.chart_type or "bar"})
+                artifact = services.artifacts.register(conversation.conversation_id, record.file_id, "chart_png", chart.name, chart, {"chart_type": action.chart_type or "bar", "source_name": record.original_name})
                 conversation.artifact_ids.append(artifact.artifact_id); services.workspace.update(conversation); services.workspace.increment("charts_generated"); notices.append("График добавлен в артефакты.")
             elif action.type == "generate_report" and summary:
                 report = await asyncio.to_thread(services.reports.generate, services.settings.outputs_dir, conversation.conversation_id, record.original_name, summary, services.analysis.concise_findings(summary), None)
@@ -135,7 +135,7 @@ async def chart(request: Request, chart_type: str):
         if not record or not summary: raise WorkspaceError()
         frame = await asyncio.to_thread(services.analysis.read, services.files.path_for(record), record.extension)
         chart_path = await asyncio.to_thread(services.charts.generate, frame, services.settings.outputs_dir, conversation.conversation_id, chart_type)
-        artifact = services.artifacts.register(conversation.conversation_id, record.file_id, "chart_png", chart_path.name, chart_path, {"chart_type": chart_type})
+        artifact = services.artifacts.register(conversation.conversation_id, record.file_id, "chart_png", chart_path.name, chart_path, {"chart_type": chart_type, "source_name": record.original_name})
         conversation.artifact_ids.append(artifact.artifact_id); services.workspace.update(conversation); services.workspace.increment("charts_generated")
         return _response(request, conversation, notice=f"{chart_type.title()}-график создан.")
     except WorkspaceError as exc: return _response(request, conversation, error=exc.user_message)
@@ -165,12 +165,25 @@ async def summary(request: Request):
     except WorkspaceError as exc: return _response(request, conversation, error=exc.user_message)
 
 
+@router.get("/artifacts/{artifact_id}/view")
+async def view_chart(request: Request, artifact_id: UUID):
+    services = _services(request); conversation = _conversation(request)
+    try:
+        artifact = services.artifacts.get(artifact_id, conversation.conversation_id)
+        if artifact.type != "chart_png":
+            raise ArtifactNotFoundError()
+        return FileResponse(services.artifacts.path_for(artifact), media_type="image/png", headers={"Content-Disposition": "inline"})
+    except WorkspaceError as exc:
+        return _response(request, conversation, error=exc.user_message)
+
+
 @router.get("/artifacts/{artifact_id}")
 async def download(request: Request, artifact_id: UUID):
     services = _services(request); conversation = _conversation(request)
     try:
         artifact = services.artifacts.get(artifact_id, conversation.conversation_id)
         services.workspace.increment("analysis_requests")
-        return FileResponse(services.artifacts.path_for(artifact), filename=artifact.name, media_type="application/octet-stream")
+        media_type = "image/png" if artifact.type == "chart_png" else "application/octet-stream"
+        return FileResponse(services.artifacts.path_for(artifact), filename=artifact.name, media_type=media_type)
     except WorkspaceError as exc:
         return _response(request, conversation, error=exc.user_message)

@@ -14,6 +14,17 @@
     <div class="messages">
       {% for message in conversation.messages %}<article class="message {{ message.role }}"><b>{{ "Вы" if message.role == "user" else "Аналитик" }}</b><p>{{ message.content }}</p></article>{% else %}<p class="muted">Загрузите CSV, Excel, JSON или изображение. Данные останутся в текущем изолированном workspace.</p>{% endfor %}
     </div>
+    {% set chart_artifacts = artifacts | selectattr("type", "equalto", "chart_png") | list %}
+    {% if chart_artifacts %}
+    <section class="chart-results" aria-label="Созданные графики">
+      {% for artifact in chart_artifacts | reverse %}
+      <figure class="chart-preview" data-artifact-id="{{ artifact.artifact_id }}">
+        <figcaption><strong>{{ artifact.metadata.get("chart_type", "chart") | title }} — {{ artifact.metadata.get("source_name", active.original_name if active else "dataset") }}</strong><a href="{{ root_path }}{{ artifact.download_url }}" download>Скачать PNG</a></figcaption>
+        <img src="{{ root_path }}{{ artifact.download_url }}/view" alt="{{ artifact.metadata.get("chart_type", "chart") | title }} график" loading="eager">
+      </figure>
+      {% endfor %}
+    </section>
+    {% endif %}
     <form class="composer" method="post" action="{{ root_path }}/chat"><input name="question" maxlength="1200" placeholder="Например: Проанализируй файл, кратко" required><button>Отправить</button></form>
   </section>
   <aside class="sidebar">
@@ -24,7 +35,7 @@
       <form method="post" action="{{ root_path }}/chart/line"><button>Line</button></form><form method="post" action="{{ root_path }}/chart/bar"><button>Bar</button></form><form method="post" action="{{ root_path }}/chart/histogram"><button>Histogram</button></form><form method="post" action="{{ root_path }}/chart/scatter"><button>Scatter</button></form><form method="post" action="{{ root_path }}/chart/pie"><button>Pie</button></form>
       <form method="post" action="{{ root_path }}/report"><button>Создать DOCX</button></form><form method="post" action="{{ root_path }}/summary"><button>Сохранить Markdown</button></form>
     </div></section>
-    <section class="card"><h2>Артефакты</h2><ul>{% for artifact in artifacts %}<li><a href="{{ root_path }}{{ artifact.download_url }}">↓ {{ artifact.type }}</a><small>{{ artifact.size_bytes }} bytes</small></li>{% else %}<li class="muted">Пока нет артефактов</li>{% endfor %}</ul></section>
+    <section class="card"><h2>Артефакты</h2><ul>{% for artifact in artifacts %}<li><a href="{{ root_path }}{{ artifact.download_url }}">↓ {% if artifact.type == "chart_png" %}{{ artifact.metadata.get("chart_type", "Chart") | title }} — {{ artifact.metadata.get("source_name", active.original_name if active else "dataset") }}{% else %}{{ artifact.type }}{% endif %}</a><small>{{ artifact.size_bytes }} bytes</small></li>{% else %}<li class="muted">Пока нет артефактов</li>{% endfor %}</ul></section>
     <section class="card status"><h2>Статус</h2><p>Broker: scoped</p><p>Resolved model: {{ resolved_model or "будет определена после запроса" }}</p></section>
   </aside>
 </main>
